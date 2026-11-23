@@ -1,0 +1,151 @@
+/* PAGE LAYOUT */
+html {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    background-image: url("../images/games_bg.png");
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+
+    color: #ffffff;
+}
+
+/* DARK OVERLAY FOR READABILITY */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* NAVBAR */
+.navbar {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+/* MAIN CONTENT */
+main {
+    position: relative;
+    z-index: 1;
+    flex: 1 0 auto;
+    width: 100%;
+    padding-bottom: 50px;
+}
+
+/* HEADINGS */
+.games-page h1,
+.games-page h2,
+.games-page h3,
+.games-page h4,
+.games-page h5,
+.games-page p,
+.games-page span,
+.games-page strong {
+    color: #ffffff;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.games-page .text-muted {
+    color: #e3e3e3 !important;
+}
+
+/* TABS */
+.games-page .nav-tabs .nav-link {
+    color: #ffffff !important;
+    font-weight: 600;
+    background: rgba(20, 30, 45, 0.70);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.games-page .nav-tabs .nav-link:hover {
+    background: rgba(40, 60, 85, 0.90);
+}
+
+.games-page .nav-tabs .nav-link.active {
+    color: #ffffff !important;
+    background: rgba(25, 45, 70, 0.95);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* REGION CARDS */
+.games-page .region-card {
+    background: rgba(20, 30, 45, 0.88);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.games-page .region-card .card-title,
+.games-page .region-card h4,
+.games-page .region-card h5 {
+    color: #ffffff !important;
+    text-shadow: none;
+}
+
+.games-page .region-card:hover {
+    background: rgba(35, 55, 80, 0.96);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+/* GAME RESULT CARDS */
+.games-page .list-group-item {
+    background: rgba(20, 30, 45, 0.92);
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    padding: 20px;
+}
+
+/* GAME IMAGE BOX */
+.games-page .game-image-container {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.20);
+    border-radius: 10px;
+    min-height: 220px;
+}
+
+/* COLLAPSE PANELS */
+.games-page .game-info-panel {
+    background: rgba(35, 45, 65, 0.95) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* FOOTER */
+footer,
+.footer {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    margin-top: auto;
+    background: #1c2023;
+    color: white;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    body {
+        background-attachment: scroll;
+    }
+
+    .games-page .region-card,
+    .games-page .list-group-item {
+        padding: 15px;
+    }
+}

@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+django_env/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Local databases and backups
+db.sqlite3*
+*.sql
+*.dump
+*.backup
+pgdata/
+postgres_data/
+
+# Generated files
+staticfiles/
+media/
+*.log
+.DS_Store

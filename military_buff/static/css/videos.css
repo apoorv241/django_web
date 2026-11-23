@@ -1,0 +1,596 @@
+/* =====================================================
+   MILITARY BUFF — VIDEOS PAGE
+   Background image: static/images/videos_bg.png
+   This file:       static/css/videos.css
+   ===================================================== */
+
+/* Full-page cinematic background */
+html {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #090f19;
+    background-image: url("../images/videos_bg.png");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+/* Readability overlay — sits behind page content */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 10, 20, 0.76);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Place text/cards above the dark overlay */
+.navbar,
+.main-content,
+.videos-page,
+footer {
+    position: relative;
+    z-index: 1;
+}
+
+.main-content {
+    flex: 1 0 auto;
+    width: 100%;
+}
+
+/* Heading and body text */
+.videos-page {
+    color: #ffffff;
+    font-weight: 600;
+    padding-bottom: 50px;
+}
+
+.videos-page h1,
+.videos-page h2,
+.videos-page h3,
+.videos-page h4,
+.videos-page h5,
+.videos-page .card-title,
+.videos-page .section-heading {
+    color: #ffffff !important;
+    font-weight: 800;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+}
+
+.videos-page p,
+.videos-page .card-text,
+.videos-page .card-body,
+.videos-page .transcript-text {
+    color: #f5f7fb !important;
+    font-weight: 600;
+    line-height: 1.65;
+}
+
+.videos-page .text-muted,
+.videos-page small.text-muted {
+    color: #e2e8f0 !important;
+    font-weight: 600;
+}
+
+.videos-page .section-heading {
+    text-shadow: 2px 3px 10px #000000;
+}
+
+/* Modern / Medieval / Ancient tabs */
+.videos-page .nav-tabs {
+    border-bottom-color: rgba(255, 255, 255, 0.35);
+}
+
+.videos-page .nav-tabs .nav-link {
+    color: #ffffff !important;
+    background: rgba(13, 26, 44, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    font-weight: 800;
+    padding: 14px 16px;
+    text-shadow: 0 1px 3px #000;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.videos-page .nav-tabs .nav-link:hover,
+.videos-page .nav-tabs .nav-link.active {
+    color: #ffffff !important;
+    background: rgba(44, 74, 109, 0.98);
+    border-color: rgba(255, 255, 255, 0.90);
+}
+
+/* Region and playlist cards */
+.videos-page .region-card,
+.videos-page .playlist-card {
+    background: rgba(11, 24, 42, 0.94);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.50);
+    border-radius: 12px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+.videos-page .region-card:hover,
+.videos-page .playlist-card:hover,
+.videos-page .playlist-card:focus {
+    background: rgba(32, 61, 91, 0.98);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.50);
+}
+
+.videos-page .region-card:focus-visible,
+.videos-page .playlist-card:focus-visible,
+.videos-page .nav-link:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+}
+
+.videos-page .region-card .card-title,
+.videos-page .playlist-card .card-title {
+    color: #ffffff !important;
+    font-weight: 800;
+}
+
+.videos-page .playlist-card .card-body {
+    text-align: left;
+}
+
+/* Playlist cover thumbnails */
+.videos-page .playlist-thumbnail {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(135deg, #172235, #284565);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.videos-page .playlist-thumbnail img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+.videos-page .playlist-thumbnail .playlist-placeholder {
+    position: relative;
+    font-size: 3rem;
+    color: #ffffff;
+}
+
+/* Video cards and transcript panels */
+.videos-page .video-card {
+    background: rgba(10, 23, 40, 0.96);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.38);
+}
+
+.videos-page .video-info-panel {
+    background: rgba(26, 42, 63, 0.98) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.30);
+}
+
+.videos-page .transcript-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Video thumbnails and click-to-play */
+.videos-page .video-poster {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 10px;
+    background: linear-gradient(135deg, #152033, #2b3c52);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.videos-page .video-poster img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.videos-page .video-poster::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.20);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.videos-page .video-poster .play-icon {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 56px;
+    border-radius: 14px;
+    background: #cc0000;
+    color: #ffffff;
+    font-size: 29px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.videos-page .video-poster:hover .play-icon,
+.videos-page .video-poster:focus .play-icon {
+    transform: scale(1.06);
+    background: #ff0000;
+}
+
+.videos-page .video-poster:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.videos-page .video-poster .poster-placeholder {
+    position: relative;
+    z-index: 2;
+    font-size: 1rem;
+    color: #ffffff;
+}
+
+/* Responsive embedded YouTube player */
+.videos-page .video-player-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #090d15;
+}
+
+.videos-page .video-player-wrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.videos-page .btn,
+.videos-page .watch-youtube {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    body {
+        background-attachment: scroll;
+    }
+
+    .videos-page .video-card {
+        padding: 14px;
+    }
+
+    .videos-page .nav-tabs .nav-link {
+        padding: 10px 8px;
+    }
+}
+
+
+/* =====================================================
+   HIGH-CONTRAST CARD FIX
+   Prevent global Bootstrap / site .card rules from
+   rendering white cards behind white text.
+   ===================================================== */
+
+.videos-page button.region-card.card,
+.videos-page button.playlist-card.card {
+    background: rgba(12, 25, 44, 0.97) !important;
+    background-color: #0c192c !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(226, 235, 250, 0.60) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+    opacity: 1 !important;
+}
+
+.videos-page button.region-card.card:hover,
+.videos-page button.playlist-card.card:hover,
+.videos-page button.region-card.card:focus,
+.videos-page button.playlist-card.card:focus {
+    background: #234263 !important;
+    background-color: #234263 !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.58);
+}
+
+/* Bootstrap/card styles should not paint light inner panels. */
+.videos-page .region-card .card-body,
+.videos-page .playlist-card .card-body {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* Readable region and playlist names and descriptions. */
+.videos-page .region-card h4,
+.videos-page .region-card h5,
+.videos-page .region-card .card-title,
+.videos-page .playlist-card h4,
+.videos-page .playlist-card h5,
+.videos-page .playlist-card .card-title {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    text-shadow: 0 2px 4px #000000;
+    opacity: 1 !important;
+}
+
+.videos-page .playlist-card p,
+.videos-page .playlist-card .card-text {
+    color: #f1f5f9 !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+    text-shadow: none;
+}
+
+.videos-page .playlist-card small,
+.videos-page .playlist-card .text-muted {
+    color: #dbeafe !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
+
+.videos-page .playlist-thumbnail {
+    background: #192d47 !important;
+    background-image: linear-gradient(135deg, #192d47, #314f6e) !important;
+}
+
+/* Ensure cards for individual videos stay dark as well. */
+.videos-page .video-card,
+.videos-page .video-info-panel {
+    background-color: #101e32 !important;
+    color: #ffffff !important;
+}
+
+
+/* ==========================================
+   VIDEO CARDS: CONSISTENT THUMBNAIL + TEXT
+   (added after the original styles on purpose)
+   ========================================== */
+
+/* Keep the same dark card theme for regions and playlists. */
+body .videos-page button.region-card.card,
+body .videos-page button.playlist-card.card {
+    background: #101f34 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+    border: 1px solid rgba(255,255,255,.50) !important;
+}
+
+body .videos-page button.region-card.card .card-body,
+body .videos-page button.playlist-card.card .card-body {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+
+body .videos-page button.playlist-card.card p,
+body .videos-page button.playlist-card.card small,
+body .videos-page button.playlist-card.card .card-title,
+body .videos-page button.region-card.card .card-title {
+    color: #f8fafc !important;
+    opacity: 1 !important;
+    text-shadow: none;
+}
+
+body .videos-page button.region-card.card.is-selected,
+body .videos-page button.playlist-card.card.is-selected {
+    background: #1d426a !important;
+    border: 2px solid #8dc2ff !important;
+    box-shadow: 0 0 0 2px rgba(141,194,255,.18);
+}
+
+/* Episode results: one full-width row per video, balanced columns. */
+body .videos-page #videosList {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body .videos-page #videosList > article.video-card {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr) !important;
+    gap: 26px !important;
+    align-items: start !important;
+    width: 100% !important;
+    padding: 22px !important;
+    margin: 0 !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(194,215,241,.35) !important;
+    background: rgba(11, 23, 40, .97) !important;
+    color: #ffffff !important;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .38) !important;
+}
+
+body .videos-page .video-media,
+body .videos-page .video-details {
+    min-width: 0;
+    width: 100%;
+}
+
+/* Video poster and iframe share exactly the same dimensions. */
+body .videos-page .video-media .video-poster,
+body .videos-page .video-media .video-player-wrapper {
+    display: flex;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #0b1524;
+    border: 1px solid rgba(255,255,255,.30);
+}
+
+body .videos-page .video-media .video-poster > img {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block;
+}
+
+body .videos-page .video-media .video-player-wrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+}
+
+body .videos-page .video-media .play-icon {
+    position: relative;
+    z-index: 3;
+    width: 78px;
+    height: 54px;
+    color: #ffffff !important;
+    background: #d00 !important;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+body .videos-page .video-media .video-poster:hover .play-icon {
+    background: #ff1f1f !important;
+    transform: scale(1.05);
+}
+
+body .videos-page .video-media .watch-youtube {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: auto !important;
+    margin: 14px 0 0 !important;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 750;
+    text-decoration: none;
+    background: #dc3545 !important;
+    border-radius: 8px;
+    color: #ffffff !important;
+}
+
+body .videos-page .video-details .video-title {
+    margin: 0 0 18px !important;
+    font-size: clamp(1.2rem, 2vw, 1.65rem);
+    line-height: 1.3;
+    font-weight: 800 !important;
+    color: #fff !important;
+    text-shadow: none;
+}
+
+body .videos-page .video-details .video-about-heading {
+    margin: 0 0 8px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #dceaff !important;
+    text-shadow: none;
+}
+
+body .videos-page .video-details .video-description {
+    color: #eef3fb !important;
+    line-height: 1.7;
+    font-weight: 500 !important;
+    font-size: 1rem;
+    margin: 0 0 18px;
+    text-shadow: none;
+}
+
+body .videos-page .video-details .video-transcript-unavailable {
+    color: #c6d5e6 !important;
+    font-size: .9rem;
+    font-weight: 500 !important;
+    margin-top: 16px;
+}
+
+body .videos-page .video-info-panel.card {
+    background: #20344e !important;
+    color: #ffffff !important;
+    border: 1px solid #57708e !important;
+}
+
+body .videos-page .video-info-panel .transcript-text {
+    color: #f6f9fc !important;
+    font-weight: 500 !important;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+body .videos-page .video-unavailable {
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    background: #23344b;
+    color: white;
+    border-radius: 10px;
+}
+
+/* Single column on tablets and phones */
+@media (max-width: 900px) {
+    body .videos-page #videosList > article.video-card {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 18px !important;
+        padding: 16px !important;
+    }
+}
+
+@media (max-width: 575px) {
+    body .videos-page #videosList > article.video-card {
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+    body .videos-page .video-media .watch-youtube {
+        width: 100% !important;
+    }
+}

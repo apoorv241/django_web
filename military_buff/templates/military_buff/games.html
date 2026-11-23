@@ -1,0 +1,589 @@
+{% extends 'military_buff/base.html' %}
+
+{% block title %}Military Games | Military Buff{% endblock %}
+{% load static %}
+{% block extra_css %}
+
+<link rel="stylesheet" href="{% static 'css/books.css' %}">
+
+
+<style>
+    /* Games page text */
+    .games-page,
+    .games-page h1,
+    .games-page h3,
+    .games-page h4,
+    .games-page h5,
+    .games-page p {
+        color: #ffffff;
+    }
+
+    .games-page .text-muted {
+        color: #e0e0e0 !important;
+    }
+
+    /* Period navigation tabs */
+    .games-page .nav-tabs .nav-link {
+        color: white !important;
+        font-weight: 600;
+        background: rgba(20, 30, 45, 0.75);
+    }
+
+    .games-page .nav-tabs .nav-link.active {
+        color: white !important;
+        background: rgba(35, 55, 80, 0.95);
+        border-color: white;
+    }
+
+    /* Region cards */
+    .games-page .region-card {
+        background: rgba(20, 30, 45, 0.85);
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .games-page .region-card .card-title {
+        color: white !important;
+    }
+
+    .games-page .region-card:hover {
+        background: rgba(40, 60, 85, 0.95);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    /* Game cards */
+    .games-page .list-group-item {
+        background: rgba(20, 30, 45, 0.90);
+        color: white !important;
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 10px;
+        margin-bottom: 15px;
+        padding: 20px;
+    }
+
+    .games-page .game-title,
+    .games-page .game-review,
+    .games-page .game-description {
+        color: white !important;
+    }
+
+    /* Game image */
+    .games-page .game-image {
+        max-height: 220px;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    .games-page .game-image-container {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.3);
+        min-height: 220px;
+    }
+
+    /* Review and description panels */
+    .games-page .game-info-panel {
+        background: rgba(35, 45, 65, 0.95) !important;
+        color: white !important;
+    }
+
+    .games-page .game-info-panel p {
+        color: white !important;
+    }
+
+    /* Website button */
+    .games-page .website-link {
+        color: white !important;
+        font-weight: 600;
+    }
+
+    /* Selected region heading */
+    .games-page #selectionTitle {
+        color: white !important;
+        text-shadow: 2px 2px 6px black;
+    }
+
+    @media (max-width: 768px) {
+        .games-page .list-group-item {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container py-5 games-page">
+
+    <h1 class="text-center mb-3">Military Games</h1>
+
+    <p class="text-center text-muted mb-5">
+        Explore military history through strategy,
+        simulation and historical warfare games.
+    </p>
+
+    <!-- Time Period Navigation -->
+    <ul class="nav nav-tabs nav-fill"
+        id="eraTabs"
+        role="tablist">
+
+        {% for period in time_periods %}
+
+        <li class="nav-item">
+
+            <a class="nav-link {% if period.name|lower == 'modern' %}active{% endif %}"
+               id="period-tab-{{ period.id }}"
+               data-toggle="tab"
+               href="#period-{{ period.id }}"
+               role="tab"
+               aria-controls="period-{{ period.id }}"
+               aria-selected="{% if period.name|lower == 'modern' %}true{% else %}false{% endif %}">
+
+                {{ period.name }}
+
+            </a>
+
+        </li>
+
+        {% endfor %}
+
+    </ul>
+
+
+    <!-- Time Period Content -->
+    <div class="tab-content mt-4" id="eraTabContent">
+
+        {% for period in time_periods %}
+
+        <div class="tab-pane fade {% if period.name|lower == 'modern' %}show active{% endif %}"
+             id="period-{{ period.id }}"
+             role="tabpanel"
+             aria-labelledby="period-tab-{{ period.id }}">
+
+            <h3 class="text-center mb-4">
+                {{ period.name }} Military Games
+            </h3>
+
+            <!-- Region Cards -->
+            <div class="row">
+
+                {% for region in regions %}
+
+                <div class="col-6 col-md-3 mb-4">
+
+                    <button type="button"
+                            class="card w-100 h-100 text-center region-card"
+                            data-timeperiod-id="{{ period.id }}"
+                            data-timeperiod-name="{{ period.name }}"
+                            data-region-id="{{ region.id }}"
+                            data-region-name="{{ region.name }}">
+
+                        <div class="card-body">
+
+                            <h4 aria-hidden="true">
+
+                                {% if region.name|lower == 'asia' %}
+                                    🌏
+                                {% elif region.name|lower == 'africa' %}
+                                    🌍
+                                {% elif region.name|lower == 'europe' %}
+                                    🏰
+                                {% elif region.name|lower == 'americas' %}
+                                    🌎
+                                {% else %}
+                                    🌐
+                                {% endif %}
+
+                            </h4>
+
+                            <h5 class="card-title">
+                                {{ region.name }}
+                            </h5>
+
+                        </div>
+
+                    </button>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- AJAX Games Results -->
+    <div id="selectedRegion" class="mt-5 d-none">
+
+        <h3 id="selectionTitle" class="text-center mb-4"></h3>
+
+        <ul id="gamesList" class="list-group"></ul>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+$(document).ready(function () {
+
+    const gamesList = document.getElementById("gamesList");
+    const selectedRegion = document.getElementById("selectedRegion");
+    const selectionTitle = document.getElementById("selectionTitle");
+
+    // Django URL pattern
+    const fetchGamesUrlPattern =
+        "{% url 'fetch_games' 111111111 222222222 %}";
+
+    let pendingRequest = null;
+
+
+    // CREATE GAME CARD
+    function createGameCard(game) {
+
+        const li = document.createElement("li");
+        li.className = "list-group-item";
+
+        const id = "game-" + game.id;
+
+        li.innerHTML = `
+            <div class="row align-items-start">
+
+                <!-- Game Cover -->
+                <div class="col-md-3 mb-3">
+
+                    <div class="game-image-container rounded
+                                d-flex align-items-center
+                                justify-content-center">
+
+                        <img class="game-image img-fluid rounded d-none"
+                             alt="Game Cover">
+
+                        <span class="no-cover text-muted">
+                            No image available
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Game Information -->
+                <div class="col-md-9">
+
+                    <h4 class="game-title"></h4>
+
+                    <!-- Review Button -->
+                    <button type="button"
+                            class="btn btn-primary btn-lg mr-3 mb-2"
+                            data-toggle="collapse"
+                            data-target="#review-${id}"
+                            aria-expanded="false"
+                            aria-controls="review-${id}">
+
+                        Read Review
+
+                    </button>
+
+                    <!-- About Game Button -->
+                    <button type="button"
+                            class="btn btn-secondary btn-lg mr-3 mb-2"
+                            data-toggle="collapse"
+                            data-target="#about-${id}"
+                            aria-expanded="false"
+                            aria-controls="about-${id}">
+
+                        About the Game
+
+                    </button>
+
+                    <!-- Game Website Button -->
+                    <a class="btn btn-success btn-lg mb-2
+                              website-link d-none"
+                       target="_blank"
+                       rel="noopener noreferrer">
+
+                        🎮 Visit Game Website
+
+                    </a>
+
+
+                    <!-- Game Review -->
+                    <div class="collapse mt-3"
+                         id="review-${id}">
+
+                        <div class="card card-body
+                                    game-info-panel p-4 shadow-sm">
+
+                            <h4>Game Review</h4>
+
+                            <p class="game-review lead"></p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- About Game -->
+                    <div class="collapse mt-3"
+                         id="about-${id}">
+
+                        <div class="card card-body
+                                    game-info-panel p-4 shadow-sm">
+
+                            <h4>About the Game</h4>
+
+                            <p class="game-description lead"></p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+
+        // Populate game information
+        li.querySelector(".game-title").textContent =
+            game.name || "";
+
+        li.querySelector(".game-review").textContent =
+            game.review || "";
+
+        li.querySelector(".game-description").textContent =
+            game.about_the_game || "";
+
+
+        // Game Cover Image
+        const image = li.querySelector(".game-image");
+        const noCover = li.querySelector(".no-cover");
+
+        if (game.photo_url) {
+
+            image.src = game.photo_url;
+            image.alt = "Cover of " + (game.name || "game");
+
+            image.classList.remove("d-none");
+            noCover.classList.add("d-none");
+
+            image.onerror = function () {
+                image.classList.add("d-none");
+                noCover.classList.remove("d-none");
+            };
+
+        }
+
+
+        // Game Website Link
+        const websiteButton =
+            li.querySelector(".website-link");
+
+        if (game.website_url) {
+
+            try {
+
+                const websiteUrl =
+                    new URL(game.website_url);
+
+                if (
+                    websiteUrl.protocol === "https:" ||
+                    websiteUrl.protocol === "http:"
+                ) {
+
+                    websiteButton.href = websiteUrl.href;
+
+                    websiteButton.classList.remove("d-none");
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Invalid game website URL:",
+                    game.website_url
+                );
+
+            }
+
+        }
+
+        return li;
+    }
+
+
+    // REGION CARD CLICK EVENT
+    $(document).on("click", ".games-page .region-card", function (event) {
+
+        event.preventDefault();
+
+        const timeperiodId =
+            $(this).attr("data-timeperiod-id");
+
+        const regionId =
+            $(this).attr("data-region-id");
+
+        const timeperiodName =
+            $(this).attr("data-timeperiod-name");
+
+        const regionName =
+            $(this).attr("data-region-name");
+
+
+        if (!timeperiodId || !regionId) {
+
+            console.error("Missing timeperiod or region ID");
+            return;
+        }
+
+
+        // Generate URL
+        const url = fetchGamesUrlPattern
+            .replace("111111111", timeperiodId)
+            .replace("222222222", regionId);
+
+        console.log("Fetching games:", url);
+
+
+        // Abort previous AJAX request
+        if (pendingRequest) {
+
+            pendingRequest.abort();
+            pendingRequest = null;
+
+        }
+
+
+        // Update heading
+        selectionTitle.textContent =
+            timeperiodName + " - " + regionName + " Military Games";
+
+        selectedRegion.classList.remove("d-none");
+
+        gamesList.innerHTML =
+            '<li class="list-group-item">Loading games...</li>';
+
+
+        // AJAX Request
+        const request = $.ajax({
+
+            url: url,
+            type: "GET",
+            dataType: "json",
+
+
+            success: function(response) {
+
+                console.log("Games response:", response);
+
+                gamesList.innerHTML = "";
+
+                const games = Array.isArray(response.games)
+                    ? response.games
+                    : [];
+
+
+                if (games.length === 0) {
+
+                    gamesList.innerHTML =
+                        '<li class="list-group-item">' +
+                        'No games found for this selection.' +
+                        '</li>';
+
+                    return;
+                }
+
+
+                games.forEach(function(game) {
+
+                    gamesList.appendChild(
+                        createGameCard(game)
+                    );
+
+                });
+
+            },
+
+
+            error: function(xhr, status, error) {
+
+                if (status === "abort") {
+                    return;
+                }
+
+                console.error("AJAX Error:", error);
+                console.error("HTTP Status:", xhr.status);
+                console.error("Response:", xhr.responseText);
+
+                gamesList.innerHTML =
+                    '<li class="list-group-item text-danger">' +
+                    'Error fetching games. Please try again.' +
+                    '</li>';
+
+            },
+
+
+            complete: function() {
+
+                if (pendingRequest === request) {
+                    pendingRequest = null;
+                }
+
+            }
+
+        });
+
+        pendingRequest = request;
+
+    });
+
+
+    // Clear games when switching period tabs
+    $("#eraTabs a[data-toggle='tab']").on(
+        "shown.bs.tab",
+        function () {
+
+            if (pendingRequest) {
+
+                pendingRequest.abort();
+                pendingRequest = null;
+
+            }
+
+            selectedRegion.classList.add("d-none");
+
+            gamesList.innerHTML = "";
+
+        }
+    );
+
+    // Initial page state: Modern -> Europe.
+    // Run after region-click AJAX handlers have been registered.
+    const defaultModernPane = $("#eraTabContent .tab-pane.active");
+    const defaultEuropeCard = defaultModernPane.find(".region-card").filter(function () {
+        return (this.dataset.regionName || "").trim().toLowerCase() === "europe";
+    }).first();
+
+    if (defaultEuropeCard.length) {
+        defaultEuropeCard.trigger("click");
+    }
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends 'military_buff/base.html' %}
+
+{% block title %}Military History | Military Buff{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="text-center mb-3">Military History</h1>
+    <p class="text-center text-muted mb-5">
+        Explore military history across different periods and continents.
+    </p>
+
+    <!-- Time-period tabs come from the Django context -->
+    <ul class="nav nav-tabs nav-fill" id="eraTabs" role="tablist">
+        {% for period in timeperiods %}
+        <li class="nav-item">
+            <a class="nav-link {% if forloop.first %}active{% endif %}"
+               id="period-tab-{{ period.id }}"
+               data-toggle="tab"
+               href="#period-{{ period.id }}"
+               role="tab"
+               aria-controls="period-{{ period.id }}"
+               aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                {{ period.name }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Region cards come from the Django context, once per period -->
+    <div class="tab-content mt-4" id="eraTabContent">
+        {% for period in timeperiods %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+             id="period-{{ period.id }}"
+             role="tabpanel"
+             aria-labelledby="period-tab-{{ period.id }}">
+
+            <h3 class="text-center mb-4">{{ period.name }} Military History</h3>
+
+            <div class="row">
+                {% for region in regions %}
+                <div class="col-6 col-md-3 mb-4">
+                    <button type="button"
+                            class="card w-100 h-100 text-center region-card"
+                            data-timeperiod-id="{{ period.id }}"
+                            data-timeperiod-name="{{ period.name }}"
+                            data-region-id="{{ region.id }}"
+                            data-region-name="{{ region.name }}">
+                        <div class="card-body">
+                            <h4 aria-hidden="true">
+                                {% if region.name|lower == 'asia' %}🌏
+                                {% elif region.name|lower == 'africa' %}🌍
+                                {% elif region.name|lower == 'europe' %}🏰
+                                {% elif region.name|lower == 'americas' %}🌎
+                                {% else %}🌐{% endif %}
+                            </h4>
+                            <h5 class="card-title">{{ region.name }}</h5>
+                        </div>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- AJAX results -->
+    <div id="selectedRegion" class="mt-5 d-none">
+        <h3 id="selectionTitle" class="text-center mb-4"></h3>
+        <ul id="historyList" class="list-group"></ul>
+    </div>
+</div>
+
+<script>
+$(function () {
+    const historyList = document.getElementById("historyList");
+    const selectedRegion = document.getElementById("selectedRegion");
+    const selectionTitle = document.getElementById("selectionTitle");
+
+    // Django resolves the URL prefix, even if the app is mounted under /military/.
+    const fetchBooksUrlPattern = "{% url 'fetch_books' 111111111 222222222 %}";
+    let pendingRequest = null;
+    let requestCounter = 0;
+
+    function createBookCard(book) {
+        const li = document.createElement("li");
+        li.className = "list-group-item";
+        const id = "book-" + book.id;
+
+        li.innerHTML = `
+            <div class="row align-items-start">
+                <div class="col-md-3 mb-3">
+                    <div class="bg-light border rounded d-flex align-items-center justify-content-center"
+                         style="min-height: 180px;">
+                        <img class="book-image img-fluid rounded"
+                             alt="Book cover"
+                             style="max-height: 180px;">
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                    <h4 class="book-title"></h4>
+                    <p class="text-muted">
+                        <strong>Author:</strong> <span class="book-author"></span>
+                    </p>
+
+                    <button type="button"
+                            class="btn btn-primary btn-lg px-5 py-3 mr-3 mb-2"
+                            data-toggle="collapse"
+                            data-target="#review-${id}"
+                            aria-controls="review-${id}"
+                            aria-expanded="false">
+                        Read Review
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-secondary btn-lg px-5 py-3 mb-2"
+                            data-toggle="collapse"
+                            data-target="#author-${id}"
+                            aria-controls="author-${id}"
+                            aria-expanded="false">
+                        About the Author
+                    </button>
+
+                    <div class="collapse mt-3" id="review-${id}">
+                        <div class="card card-body bg-light p-4 shadow-sm">
+                            <h4 class="mb-3">Book Review</h4>
+                            <p class="book-review lead"></p>
+                        </div>
+                    </div>
+
+                    <div class="collapse mt-3" id="author-${id}">
+                        <div class="card card-body bg-light p-4 shadow-sm">
+                            <h4 class="mb-3">About the Author</h4>
+                            <p class="author-bio lead"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // .textContent safely inserts text returned by Django/PostgreSQL.
+        li.querySelector(".book-title").textContent = book.name || "";
+        li.querySelector(".book-author").textContent = book.author || "";
+        li.querySelector(".book-review").textContent = book.review || "";
+        li.querySelector(".author-bio").textContent = book.about_the_author || "";
+
+        const image = li.querySelector(".book-image");
+        if (book.photo_url) {
+            image.src = book.photo_url;
+            image.alt = "Cover of " + (book.name || "book");
+        } else {
+            image.classList.add("d-none");
+        }
+
+        return li;
+    }
+
+    // Clicking a region sends its actual database IDs to Django.
+    $(".region-card").on("click", function () {
+        const timeperiodId = this.dataset.timeperiodId;
+        const regionId = this.dataset.regionId;
+        const timeperiodName = this.dataset.timeperiodName;
+        const regionName = this.dataset.regionName;
+        const url = fetchBooksUrlPattern
+            .replace("111111111", timeperiodId)
+            .replace("222222222", regionId);
+
+        requestCounter += 1;
+        const requestId = requestCounter;
+        if (pendingRequest) pendingRequest.abort();
+
+        selectionTitle.textContent = timeperiodName + " " + regionName + " Military History";
+        selectedRegion.classList.remove("d-none");
+        historyList.innerHTML = '<li class="list-group-item text-muted">Loading books...</li>';
+
+        pendingRequest = $.ajax({
+            url: url,
+            method: "GET",
+            dataType: "json"
+        }).done(function (response) {
+            if (requestId !== requestCounter) return;
+
+            historyList.innerHTML = "";
+            const books = Array.isArray(response.books) ? response.books : [];
+            if (books.length === 0) {
+                historyList.innerHTML = '<li class="list-group-item">No books found.</li>';
+                return;
+            }
+
+            books.forEach(function (book) {
+                historyList.appendChild(createBookCard(book));
+            });
+        }).fail(function (xhr, status) {
+            if (status === "abort" || requestId !== requestCounter) return;
+            historyList.innerHTML = '<li class="list-group-item text-danger">Unable to load books. Please try again.</li>';
+            console.error("Book request failed:", xhr.status, xhr.responseText);
+        }).always(function () {
+            if (requestId === requestCounter) pendingRequest = null;
+        });
+    });
+
+    // Hide old results when switching time-period tabs.
+    $("#eraTabs a[data-toggle='tab']").on("shown.bs.tab", function () {
+        requestCounter += 1;
+        if (pendingRequest) {
+            pendingRequest.abort();
+            pendingRequest = null;
+        }
+        selectedRegion.classList.add("d-none");
+        historyList.innerHTML = "";
+    });
+});
+</script>
+{% endblock %}

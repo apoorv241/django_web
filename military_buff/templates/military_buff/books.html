@@ -1,0 +1,440 @@
+{% extends 'military_buff/base.html' %}
+
+{% block title %}Military History | Military Buff{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/books.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <h1 class="text-center mb-3">Military History</h1>
+
+    <p class="text-center text-muted mb-5">
+        Explore military history across different periods and continents.
+    </p>
+
+    <!-- Time Period Tabs -->
+    <ul class="nav nav-tabs nav-fill" id="eraTabs" role="tablist">
+
+        {% for period in time_periods %}
+
+        <li class="nav-item">
+            <a class="nav-link {% if period.name|lower == 'modern' %}active{% endif %}"
+               id="period-tab-{{ period.id }}"
+               data-toggle="tab"
+               href="#period-{{ period.id }}"
+               role="tab"
+               aria-controls="period-{{ period.id }}"
+               aria-selected="{% if period.name|lower == 'modern' %}true{% else %}false{% endif %}">
+
+                {{ period.name }}
+
+            </a>
+        </li>
+
+        {% endfor %}
+
+    </ul>
+
+
+    <!-- Time Period Content -->
+    <div class="tab-content mt-4" id="eraTabContent">
+
+        {% for period in time_periods %}
+
+        <div class="tab-pane fade {% if period.name|lower == 'modern' %}show active{% endif %}"
+             id="period-{{ period.id }}"
+             role="tabpanel"
+             aria-labelledby="period-tab-{{ period.id }}">
+
+            <h3 class="text-center mb-4">
+                {{ period.name }} Military History
+            </h3>
+
+            <div class="row">
+
+                {% for region in regions %}
+
+                <div class="col-6 col-md-3 mb-4">
+
+                    <button type="button"
+                            class="card w-100 h-100 text-center region-card"
+                            data-timeperiod-id="{{ period.id }}"
+                            data-timeperiod-name="{{ period.name }}"
+                            data-region-id="{{ region.id }}"
+                            data-region-name="{{ region.name }}">
+
+                        <div class="card-body">
+
+                            <h4 aria-hidden="true">
+                                {% if region.name|lower == 'asia' %}
+                                    🌏
+                                {% elif region.name|lower == 'africa' %}
+                                    🌍
+                                {% elif region.name|lower == 'europe' %}
+                                    🏰
+                                {% elif region.name|lower == 'americas' %}
+                                    🌎
+                                {% else %}
+                                    🌐
+                                {% endif %}
+                            </h4>
+
+                            <h5 class="card-title">
+                                {{ region.name }}
+                            </h5>
+
+                        </div>
+
+                    </button>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- AJAX Results -->
+    <div id="selectedRegion" class="mt-5 d-none">
+
+        <h3 id="selectionTitle" class="text-center mb-4"></h3>
+
+        <ul id="historyList" class="list-group"></ul>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+<!-- JavaScript must be in extra_js, not content -->
+{% block extra_js %}
+
+<script>
+
+$(document).ready(function () {
+
+    const historyList = document.getElementById("historyList");
+    const selectedRegion = document.getElementById("selectedRegion");
+    const selectionTitle = document.getElementById("selectionTitle");
+
+    // Django generates the correct URL
+    const fetchBooksUrlPattern =
+        "{% url 'fetch_books' 111111111 222222222 %}";
+
+    let pendingRequest = null;
+
+
+    // Function to create a book card
+   
+function createBookCard(book) {
+   
+
+    const li = document.createElement("li");
+    li.className = "list-group-item";
+
+    const id = "book-" + book.id;
+
+    li.innerHTML = `
+        <div class="row align-items-start">
+
+            <!-- Book Cover -->
+            <div class="col-md-3 mb-3">
+
+                <div class="bg-light border rounded d-flex
+                            align-items-center justify-content-center"
+                     style="min-height:180px;">
+
+                    <img class="book-image img-fluid rounded d-none"
+                         alt="Book Cover"
+                         style="max-height:180px;">
+
+                    <span class="no-cover text-muted">
+                        No cover available
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- Book Details -->
+            <div class="col-md-9">
+
+                <h4 class="book-title"></h4>
+
+                <p class="text-muted">
+                    <strong>Author:</strong>
+                    <span class="book-author"></span>
+                </p>
+
+                <!-- Review Button -->
+                <button type="button"
+                        class="btn btn-primary btn-lg mr-3 mb-2"
+                        data-toggle="collapse"
+                        data-target="#review-${id}"
+                        aria-expanded="false"
+                        aria-controls="review-${id}">
+                    Read Review
+                </button>
+
+                <!-- Author Button -->
+                <button type="button"
+                        class="btn btn-secondary btn-lg mr-3 mb-2"
+                        data-toggle="collapse"
+                        data-target="#author-${id}"
+                        aria-expanded="false"
+                        aria-controls="author-${id}">
+                    About the Author
+                </button>
+
+                <!-- Buy Book Button -->
+                <a class="btn btn-success btn-lg mb-2 buy-book-link d-none"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    🛒 Buy Book
+                </a>
+
+                <!-- Review -->
+                <div class="collapse mt-3" id="review-${id}">
+                    <div class="card card-body bg-light p-4 shadow-sm">
+
+                        <h4>Book Review</h4>
+                        <p class="book-review lead"></p>
+
+                    </div>
+                </div>
+
+                <!-- Author Biography -->
+                <div class="collapse mt-3" id="author-${id}">
+                    <div class="card card-body bg-light p-4 shadow-sm">
+
+                        <h4>About the Author</h4>
+                        <p class="author-bio lead"></p>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+
+    // Populate fields from Django JSON
+    li.querySelector(".book-title").textContent =
+        book.name || "";
+
+    li.querySelector(".book-author").textContent =
+        book.author || "";
+
+    li.querySelector(".book-review").textContent =
+        book.review || "";
+
+    li.querySelector(".author-bio").textContent =
+        book.about_the_author || "";
+
+    // Book cover
+    const image = li.querySelector(".book-image");
+    const noCover = li.querySelector(".no-cover");
+
+    const imageUrl = book.photo_url;
+
+    if (imageUrl) {
+
+        image.src = imageUrl;
+        image.alt = "Cover of " + (book.name || "book");
+
+        image.classList.remove("d-none");
+        noCover.classList.add("d-none");
+
+        image.onerror = function () {
+            image.classList.add("d-none");
+            noCover.classList.remove("d-none");
+        };
+    }
+
+    // Buy Book URL
+    const buyButton = li.querySelector(".buy-book-link");
+
+    if (book.buy_url) {
+        try {
+            const purchaseUrl = new URL(book.buy_url);
+
+            if (
+                purchaseUrl.protocol === "https:" ||
+                purchaseUrl.protocol === "http:"
+            ) {
+                buyButton.href = purchaseUrl.href;
+                buyButton.classList.remove("d-none");
+            }
+        } catch (error) {
+            console.error("Invalid book purchase URL:", book.buy_url);
+        }
+    }
+
+    return li;
+}
+
+
+    // Handle region card clicks
+    $(document).on("click", ".region-card", function (event) {
+
+        event.preventDefault();
+
+        const timeperiodId = $(this).attr("data-timeperiod-id");
+        const regionId = $(this).attr("data-region-id");
+
+        const timeperiodName = $(this).attr("data-timeperiod-name");
+        const regionName = $(this).attr("data-region-name");
+
+
+        if (!timeperiodId || !regionId) {
+
+            console.error("Missing timeperiod or region ID");
+            return;
+
+        }
+
+
+        // Build Django API URL
+        const url = fetchBooksUrlPattern
+            .replace("111111111", timeperiodId)
+            .replace("222222222", regionId);
+
+        console.log("Fetching books from:", url);
+
+
+        // Cancel previous request
+        if (pendingRequest) {
+            pendingRequest.abort();
+            pendingRequest = null;
+        }
+
+
+        // Display selected period and region
+        selectionTitle.textContent =
+            timeperiodName + " - " + regionName + " Military History";
+
+        selectedRegion.classList.remove("d-none");
+
+        historyList.innerHTML =
+            '<li class="list-group-item">Loading books...</li>';
+
+
+        // AJAX GET request
+        const request = $.ajax({
+
+            url: url,
+
+            type: "GET",
+
+            dataType: "json",
+
+
+            success: function (response) {
+
+                console.log("Django response:", response);
+
+                historyList.innerHTML = "";
+
+                const books = Array.isArray(response.books)
+                    ? response.books
+                    : [];
+
+
+                if (books.length === 0) {
+
+                    historyList.innerHTML =
+                        '<li class="list-group-item">No books found.</li>';
+
+                    return;
+                }
+
+
+                books.forEach(function (book) {
+
+                    const bookCard = createBookCard(book);
+
+                    historyList.appendChild(bookCard);
+
+                });
+
+            },
+
+
+            error: function (xhr, status, error) {
+
+                if (status === "abort") {
+                    return;
+                }
+
+                console.error("AJAX Error:", error);
+                console.error("HTTP Status:", xhr.status);
+                console.error("Server Response:", xhr.responseText);
+
+                historyList.innerHTML =
+                    '<li class="list-group-item text-danger">' +
+                    'Error fetching books. Please try again.' +
+                    '</li>';
+
+            },
+
+
+            complete: function () {
+
+                if (pendingRequest === request) {
+                    pendingRequest = null;
+                }
+
+            }
+
+        });
+
+        pendingRequest = request;
+
+    });
+
+
+    // Hide book results when changing time period tabs
+    $("#eraTabs a[data-toggle='tab']").on(
+        "shown.bs.tab",
+        function () {
+
+            if (pendingRequest) {
+                pendingRequest.abort();
+                pendingRequest = null;
+            }
+
+            selectedRegion.classList.add("d-none");
+
+            historyList.innerHTML = "";
+
+        }
+    );
+
+    // Initial page state: Modern -> Europe.
+    // Run after region-click AJAX handlers have been registered.
+    const defaultModernPane = $("#eraTabContent .tab-pane.active");
+    const defaultEuropeCard = defaultModernPane.find(".region-card").filter(function () {
+        return (this.dataset.regionName || "").trim().toLowerCase() === "europe";
+    }).first();
+
+    if (defaultEuropeCard.length) {
+        defaultEuropeCard.trigger("click");
+    }
+
+});
+
+</script>
+
+{% endblock %}

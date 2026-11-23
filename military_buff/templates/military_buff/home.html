@@ -1,0 +1,42 @@
+
+{% extends 'military_buff/base.html' %}
+{% load static %}
+{% block title %}Home | Military Buff{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+
+
+<section class="hero d-flex align-items-center justify-content-center">
+
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-md-9 col-lg-8 hero-content">
+
+                <h1 class="display-4 font-weight-bold mb-4">
+                    Welcome to Military Buff
+                </h1>
+
+                <p class="lead mb-4">
+                    Discover the fascinating world of military history
+                    and technology. From Hannibal Barca to the
+                    Napoleonic Wars and modern conflicts, explore
+                    military history, technology, and gaming.
+
+          
+                </p>
+
+               <!--  <a href="#explore" class="btn btn-warning btn-lg">
+                    Explore
+                </a> -->
+
+            </div>
+        </div>
+    </div>
+
+</section>
+
+{% endblock %}

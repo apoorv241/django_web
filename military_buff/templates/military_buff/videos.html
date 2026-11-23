@@ -1,0 +1,665 @@
+{% extends 'military_buff/base.html' %}
+
+{% block title %}Military Videos | Military Buff{% endblock %}
+
+{% load static %}
+
+{% block extra_css %}
+
+<link rel="stylesheet" href="{% static 'css/videos.css' %}?v=20261119-layout2">
+
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5 videos-page">
+
+    <h1 class="text-center mb-3 section-heading">Military History Videos</h1>
+
+    <p class="text-center text-muted mb-5">
+
+        Choose a time period, region, and playlist to watch documentaries.
+
+    </p>
+
+    <!-- LAYER 1: TIME PERIODS -->
+
+    <ul class="nav nav-tabs nav-fill" id="videoEraTabs" role="tablist">
+
+        {% for period in time_periods %}
+
+        <li class="nav-item">
+
+            <a class="nav-link {% if period.name|lower == 'modern' %}active{% endif %}"
+
+               id="video-tab-{{ period.id }}"
+
+               data-toggle="tab"
+
+               href="#video-period-{{ period.id }}"
+
+               role="tab"
+
+               aria-controls="video-period-{{ period.id }}"
+
+               aria-selected="{% if period.name|lower == 'modern' %}true{% else %}false{% endif %}">
+
+                {{ period.name }}
+
+            </a>
+
+        </li>
+
+        {% endfor %}
+
+    </ul>
+
+    <!-- LAYER 2: REGIONS -->
+
+    <div class="tab-content mt-4" id="videoEraContent">
+
+        {% for period in time_periods %}
+
+        <div class="tab-pane fade {% if period.name|lower == 'modern' %}show active{% endif %}"
+
+             id="video-period-{{ period.id }}"
+
+             role="tabpanel"
+
+             aria-labelledby="video-tab-{{ period.id }}">
+
+            <h3 class="text-center mb-4 section-heading">{{ period.name }} Documentaries</h3>
+
+            <div class="row">
+
+                {% for region in regions %}
+
+                <div class="col-6 col-md-3 mb-4">
+
+                    <button type="button"
+
+                            class="card w-100 h-100 text-center region-card"
+
+                            data-timeperiod-id="{{ period.id }}"
+
+                            data-timeperiod-name="{{ period.name }}"
+
+                            data-region-id="{{ region.id }}"
+
+                            data-region-name="{{ region.name }}">
+
+                        <div class="card-body">
+
+                            <h4 aria-hidden="true">
+
+                                {% if region.name|lower == 'asia' %}🌏
+
+                                {% elif region.name|lower == 'africa' %}🌍
+
+                                {% elif region.name|lower == 'europe' %}🏰
+
+                                {% elif region.name|lower == 'americas' %}🌎
+
+                                {% else %}🌐{% endif %}
+
+                            </h4>
+
+                            <h5 class="card-title">{{ region.name }}</h5>
+
+                        </div>
+
+                    </button>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <!-- LAYER 3: PLAYLISTS (AJAX) -->
+
+    <section id="playlistSection" class="mt-4 d-none" aria-live="polite">
+
+        <h3 id="playlistHeading" class="text-center mb-4 section-heading"></h3>
+
+        <div id="playlistGrid" class="row"></div>
+
+    </section>
+
+    <!-- LAYER 4: VIDEOS (AJAX) -->
+
+    <section id="videosSection" class="mt-5 d-none" aria-live="polite">
+
+        <h3 id="videosHeading" class="text-center mb-4 section-heading"></h3>
+
+        <div id="videosList"></div>
+
+    </section>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+
+$(document).ready(function () {
+
+    const playlistSection = document.getElementById("playlistSection");
+
+    const playlistHeading = document.getElementById("playlistHeading");
+
+    const playlistGrid = document.getElementById("playlistGrid");
+
+    const videosSection = document.getElementById("videosSection");
+
+    const videosHeading = document.getElementById("videosHeading");
+
+    const videosList = document.getElementById("videosList");
+
+    // These URL names must match military_buff/urls.py
+
+    const playlistUrlPattern = "{% url 'fetch_video_playlists' 111111111 222222222 %}";
+
+    const videosUrlPattern = "{% url 'fetch_playlist_videos' 111111111 %}";
+
+    let playlistsRequest = null;
+
+    let videosRequest = null;
+
+    function cancelRequests() {
+
+        if (playlistsRequest) { playlistsRequest.abort(); playlistsRequest = null; }
+
+        if (videosRequest) { videosRequest.abort(); videosRequest = null; }
+
+    }
+
+    function clearVideos() {
+
+        if (videosRequest) { videosRequest.abort(); videosRequest = null; }
+
+        videosSection.classList.add("d-none");
+
+        videosHeading.textContent = "";
+
+        videosList.replaceChildren();
+
+    }
+
+    function showPlaylistMessage(message, isError = false) {
+
+        playlistGrid.replaceChildren();
+
+        const column = document.createElement("div");
+
+        column.className = "col-12";
+
+        const card = document.createElement("div");
+
+        card.className = "video-card" + (isError ? " text-danger" : "");
+
+        card.textContent = message;
+
+        column.appendChild(card);
+
+        playlistGrid.appendChild(column);
+
+    }
+
+    function showVideoMessage(message, isError = false) {
+
+        videosList.replaceChildren();
+
+        const messageBox = document.createElement("div");
+
+        messageBox.className = "video-card" + (isError ? " text-danger" : "");
+
+        messageBox.textContent = message;
+
+        videosList.appendChild(messageBox);
+
+    }
+
+    // Returns a valid YouTube ID from embed/watch/short links.
+
+    // Videos in PostgreSQL already use /embed/VIDEO_ID URLs.
+
+    function getYouTubeId(value) {
+
+        try {
+
+            const u = new URL(value);
+
+            if (u.protocol !== "https:") return null;
+
+            const host = u.hostname.toLowerCase().replace(/^www\./, "");
+
+            let id = null;
+
+            if (host === "youtu.be") {
+
+                id = u.pathname.slice(1);
+
+            } else if (host === "youtube.com" ||
+
+                       host === "m.youtube.com" ||
+
+                       host === "youtube-nocookie.com") {
+
+                if (u.pathname === "/watch") {
+
+                    id = u.searchParams.get("v");
+
+                } else {
+
+                    const match = u.pathname.match(/^\/(?:embed|shorts)\/([A-Za-z0-9_-]{11})$/);
+
+                    if (match) id = match[1];
+
+                }
+
+            }
+
+            return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+
+        } catch (_) {
+
+            return null;
+
+        }
+
+    }
+
+    function validImageUrl(value) {
+
+        if (!value) return null;
+
+        try {
+
+            const u = new URL(value);
+
+            return (u.protocol === "https:" || u.protocol === "http:") ? u.href : null;
+
+        } catch (_) {
+
+            return null;
+
+        }
+
+    }
+
+    function createPlaylistCard(playlist) {
+
+        const col = document.createElement("div");
+
+        col.className = "col-12 col-sm-6 col-lg-4 mb-4";
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+
+        button.className = "card playlist-card w-100 h-100 text-left";
+
+        button.dataset.playlistId = playlist.id;
+
+        button.dataset.playlistName = playlist.name || "Playlist";
+
+        // Thumbnail is optional; Django can supply the first episode's thumbnail.
+
+        const poster = document.createElement("div");
+
+        poster.className = "playlist-thumbnail";
+
+        const placeholder = document.createElement("span");
+
+        placeholder.className = "playlist-placeholder";
+
+        placeholder.textContent = "🎬";
+
+        poster.appendChild(placeholder);
+
+        const imgUrl = validImageUrl(playlist.thumbnail_url);
+
+        if (imgUrl) {
+
+            const image = document.createElement("img");
+
+            image.alt = "Thumbnail for " + (playlist.name || "playlist");
+
+            image.loading = "lazy";
+
+            image.onerror = function () { image.remove(); };
+
+            image.onload = function () { placeholder.classList.add("d-none"); };
+
+            image.src = imgUrl;
+
+            poster.appendChild(image);
+
+        }
+
+        const body = document.createElement("div");
+
+        body.className = "card-body";
+
+        const title = document.createElement("h4");
+
+        title.className = "card-title";
+
+        title.textContent = "🎬 " + (playlist.name || "Untitled playlist");
+
+        const desc = document.createElement("p");
+
+        desc.className = "card-text";
+
+        desc.textContent = playlist.about || "Open this playlist to view its videos.";
+
+        const count = document.createElement("small");
+
+        count.className = "text-muted";
+
+        const n = Number(playlist.video_count || 0);
+
+        count.textContent = `${n} ${n === 1 ? "video" : "videos"} · Click to watch`;
+
+        body.append(title, desc, count);
+
+        button.append(poster, body);
+
+        col.appendChild(button);
+
+        return col;
+
+    }
+
+    // Build a horizontal, responsive video episode card.
+    function createVideoCard(video) {
+        const card = document.createElement("article");
+        card.className = "video-card";
+
+        // Media column: thumbnail/player and YouTube fallback.
+        const media = document.createElement("div");
+        media.className = "video-media";
+
+        // Details column: title, description and transcript.
+        const details = document.createElement("div");
+        details.className = "video-details";
+
+        const title = document.createElement("h4");
+        title.className = "video-title";
+        title.textContent = (video.episode_number
+            ? `Episode ${video.episode_number}: ` : "") + (video.title || "Untitled video");
+        details.appendChild(title);
+
+        const youtubeId = getYouTubeId(video.url);
+
+        if (youtubeId) {
+            const poster = document.createElement("button");
+            poster.type = "button";
+            poster.className = "video-poster";
+            poster.setAttribute("aria-label", "Play " + (video.title || "video"));
+
+            const placeholder = document.createElement("span");
+            placeholder.className = "poster-placeholder";
+            placeholder.textContent = "Thumbnail unavailable · Click to play";
+
+            const image = document.createElement("img");
+            image.alt = "Thumbnail for " + (video.title || "video");
+            image.loading = "lazy";
+            const fallbackUrl = `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+            const storedUrl = validImageUrl(video.thumbnail_url);
+            let attemptedFallback = false;
+            image.onerror = function () {
+                if (!attemptedFallback && storedUrl && storedUrl !== fallbackUrl) {
+                    attemptedFallback = true;
+                    image.src = fallbackUrl;
+                } else {
+                    image.remove();
+                    placeholder.classList.remove("d-none");
+                }
+            };
+            image.onload = function () {
+                placeholder.classList.add("d-none");
+            };
+            image.src = storedUrl || fallbackUrl;
+
+            const playIcon = document.createElement("span");
+            playIcon.className = "play-icon";
+            playIcon.textContent = "▶";
+            playIcon.setAttribute("aria-hidden", "true");
+            poster.append(image, placeholder, playIcon);
+            media.appendChild(poster);
+
+            poster.addEventListener("click", function () {
+                const wrapper = document.createElement("div");
+                wrapper.className = "video-player-wrapper";
+
+                const iframe = document.createElement("iframe");
+                iframe.title = video.title || "YouTube video player";
+                iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`;
+                iframe.referrerPolicy = "strict-origin-when-cross-origin";
+                iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+                iframe.allowFullscreen = true;
+                wrapper.appendChild(iframe);
+                poster.replaceWith(wrapper);
+            }, { once: true });
+
+            // YouTube may block iframe playback; always provide a direct link.
+            const link = document.createElement("a");
+            link.className = "btn btn-danger watch-youtube";
+            link.href = `https://www.youtube.com/watch?v=${youtubeId}`;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "▶ Watch on YouTube";
+            media.appendChild(link);
+        } else {
+            const unavailable = document.createElement("div");
+            unavailable.className = "video-unavailable";
+            unavailable.textContent = "No valid YouTube video link is available.";
+            media.appendChild(unavailable);
+        }
+
+        const aboutHeading = document.createElement("h5");
+        aboutHeading.className = "video-about-heading";
+        aboutHeading.textContent = "About the Video";
+        details.appendChild(aboutHeading);
+
+        const about = document.createElement("p");
+        about.className = "video-description";
+        about.textContent = video.about_the_video || "No description available.";
+        details.appendChild(about);
+
+        if (video.transcript && video.transcript.trim()) {
+            const transcriptDetails = document.createElement("details");
+            transcriptDetails.className = "video-transcript";
+            const summary = document.createElement("summary");
+            summary.className = "btn btn-secondary";
+            summary.textContent = "Read Transcript";
+            const panel = document.createElement("div");
+            panel.className = "card card-body video-info-panel mt-3";
+            const transcriptText = document.createElement("p");
+            transcriptText.className = "transcript-text mb-0";
+            transcriptText.textContent = video.transcript;
+            panel.appendChild(transcriptText);
+            transcriptDetails.append(summary, panel);
+            details.appendChild(transcriptDetails);
+        } else {
+            const noTranscript = document.createElement("p");
+            noTranscript.className = "video-transcript-unavailable";
+            noTranscript.textContent = "Transcript not available for this episode.";
+            details.appendChild(noTranscript);
+        }
+
+        card.append(media, details);
+        return card;
+    }
+
+    // Click a region -> GET playlists for this period and region.
+
+    $(document).on("click", ".videos-page .region-card", function () {
+        $(".videos-page .region-card").removeClass("is-selected");
+        $(this).addClass("is-selected");
+
+        cancelRequests();
+
+        clearVideos();
+
+        const periodId = this.dataset.timeperiodId;
+
+        const regionId = this.dataset.regionId;
+
+        if (!periodId || !regionId) return;
+
+        playlistHeading.textContent =
+
+            `${this.dataset.timeperiodName} - ${this.dataset.regionName} Playlists`;
+
+        playlistSection.classList.remove("d-none");
+
+        showPlaylistMessage("Loading playlists...");
+
+        const url = playlistUrlPattern
+
+            .replace("111111111", periodId)
+
+            .replace("222222222", regionId);
+
+        const request = $.ajax({
+
+            url, method: "GET", dataType: "json",
+
+            success: function (response) {
+
+                playlistGrid.replaceChildren();
+
+                const playlists = Array.isArray(response.playlists) ? response.playlists : [];
+
+                if (playlists.length === 0) {
+
+                    showPlaylistMessage("No playlists found for this period and region.");
+
+                    return;
+
+                }
+
+                playlists.forEach(p => playlistGrid.appendChild(createPlaylistCard(p)));
+
+            },
+
+            error: function (xhr, status) {
+
+                if (status !== "abort") showPlaylistMessage("Could not load playlists.", true);
+
+            },
+
+            complete: function () {
+
+                if (playlistsRequest === request) playlistsRequest = null;
+
+            }
+
+        });
+
+        playlistsRequest = request;
+
+    });
+
+    // Click a playlist -> GET its videos.
+
+    $(document).on("click", ".videos-page .playlist-card", function () {
+        $(".videos-page .playlist-card").removeClass("is-selected");
+        $(this).addClass("is-selected");
+
+        clearVideos();
+
+        const playlistId = this.dataset.playlistId;
+
+        if (!playlistId) return;
+
+        videosHeading.textContent = this.dataset.playlistName + " - Episodes";
+
+        videosSection.classList.remove("d-none");
+
+        showVideoMessage("Loading videos...");
+
+        const url = videosUrlPattern.replace("111111111", playlistId);
+
+        const request = $.ajax({
+
+            url, method: "GET", dataType: "json",
+
+            success: function (response) {
+
+                videosList.replaceChildren();
+
+                const videos = Array.isArray(response.videos) ? response.videos : [];
+
+                if (videos.length === 0) {
+
+                    showVideoMessage("No videos have been added to this playlist yet.");
+
+                    return;
+
+                }
+
+                videos.forEach(v => videosList.appendChild(createVideoCard(v)));
+
+            },
+
+            error: function (xhr, status) {
+
+                if (status !== "abort") showVideoMessage("Could not load videos.", true);
+
+            },
+
+            complete: function () {
+
+                if (videosRequest === request) videosRequest = null;
+
+            }
+
+        });
+
+        videosRequest = request;
+
+    });
+
+    // Switching periods removes selections and prevents stale responses.
+
+    $("#videoEraTabs a[data-toggle='tab']").on("shown.bs.tab", function () {
+
+        cancelRequests();
+
+        playlistSection.classList.add("d-none");
+
+        playlistGrid.replaceChildren();
+        $(".videos-page .region-card").removeClass("is-selected");
+
+        clearVideos();
+
+    });
+
+    // Initial page state: Modern -> Europe.
+    // Run after region-click AJAX handlers have been registered.
+    const defaultModernPane = $("#videoEraContent .tab-pane.active");
+    const defaultEuropeCard = defaultModernPane.find(".region-card").filter(function () {
+        return (this.dataset.regionName || "").trim().toLowerCase() === "europe";
+    }).first();
+
+    if (defaultEuropeCard.length) {
+        defaultEuropeCard.trigger("click");
+    }
+
+});
+
+</script>
+
+{% endblock %}

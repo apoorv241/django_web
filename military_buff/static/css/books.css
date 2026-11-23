@@ -1,0 +1,232 @@
+
+/* PAGE LAYOUT */
+html {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    background-image: url("../images/books_bg.png");
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+
+    color: #ffffff;
+}
+
+/* DARK BACKGROUND OVERLAY */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* NAVBAR */
+.navbar {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+/* MAIN CONTENT */
+main,
+.main-content {
+    position: relative;
+    z-index: 1;
+    flex: 1 0 auto;
+    width: 100%;
+    padding-bottom: 50px;
+    color: #ffffff;
+}
+
+/* ALL MAIN PAGE TEXT */
+main h1,
+main h2,
+main h3,
+main h4,
+main h5,
+main h6,
+main p,
+main span,
+main strong,
+main .card-title,
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4,
+.main-content h5,
+.main-content p {
+    color: #ffffff;
+}
+
+/* MUTED TEXT */
+main .text-muted,
+.main-content .text-muted {
+    color: #e5e7eb !important;
+}
+
+/* MAIN PAGE HEADING */
+main h1,
+.main-content h1 {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* DESCRIPTION UNDER HEADING */
+main .container > p,
+.main-content .container > p {
+    color: #f5f5f5 !important;
+    font-size: 17px;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.9);
+}
+
+/* HISTORICAL PERIOD HEADINGS */
+.tab-pane h3 {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* NAVIGATION TABS */
+#eraTabs .nav-link {
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 18px;
+    background: rgba(15, 20, 30, 0.45);
+    border: 1px solid transparent;
+    transition: background 0.2s ease;
+}
+
+#eraTabs .nav-link:hover {
+    color: #ffffff !important;
+    background: rgba(40, 55, 75, 0.85);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ACTIVE TAB - WHITE TEXT */
+#eraTabs .nav-link.active {
+    color: #ffffff !important;
+    background: rgba(25, 45, 70, 0.95);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* REGION CARDS */
+.region-card {
+    background: rgba(20, 30, 45, 0.85);
+    color: #ffffff !important;
+
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 15px;
+
+    cursor: pointer;
+
+    transition: transform 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+}
+
+/* REGION CARD TEXT */
+.region-card h4,
+.region-card h5,
+.region-card .card-title {
+    color: #ffffff !important;
+}
+
+/* REGION CARD HOVER */
+.region-card:hover,
+.region-card:focus {
+    background: rgba(35, 55, 80, 0.95);
+    color: #ffffff !important;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* BOOK CARDS */
+#historyList .list-group-item {
+    background: rgba(20, 30, 45, 0.90);
+    color: #ffffff !important;
+
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    margin-bottom: 15px;
+    padding: 20px;
+}
+
+/* BOOK TEXT */
+#historyList .book-title,
+#historyList .book-author,
+#historyList .book-review,
+#historyList .author-bio,
+#historyList p,
+#historyList strong,
+#historyList span,
+#historyList h4 {
+    color: #ffffff !important;
+}
+
+/* BOOK IMAGE CONTAINER */
+#historyList .bg-light.border {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* REVIEW AND AUTHOR PANELS */
+#historyList .card-body.bg-light {
+    background: rgba(35, 45, 65, 0.95) !important;
+    color: #ffffff !important;
+}
+
+/* SELECTED REGION TITLE */
+#selectionTitle {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* BUTTONS */
+#historyList .btn-primary,
+#historyList .btn-secondary {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* FOOTER */
+footer,
+.footer {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    margin-top: auto;
+
+    background: #1c2023;
+    color: #ffffff;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    body {
+        background-attachment: scroll;
+    }
+
+    .region-card {
+        padding: 10px;
+    }
+
+    #eraTabs .nav-link {
+        font-size: 15px;
+    }
+
+    #historyList .list-group-item {
+        padding: 15px;
+    }
+}
