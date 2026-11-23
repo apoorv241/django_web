@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+db.sqlite3*
+*.sql
+*.dump
+*.backup
+.venv
+django_env
+__pycache__
+*.pyc
+staticfiles
+media
+.DS_Store
