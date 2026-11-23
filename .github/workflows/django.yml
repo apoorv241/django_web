@@ -1,0 +1,85 @@
+
+name: Django Docker CI
+
+on:
+  push:
+    branches: ["main"]
+
+  pull_request:
+    branches: ["main"]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Download repository code
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Create temporary CI environment
+      - name: Create environment variables
+        run: |
+          cat > .env <<'EOF'
+          POSTGRES_DB=military_buff_db
+          POSTGRES_USER=military_user
+          POSTGRES_PASSWORD=ci_test_password
+          DJANGO_SECRET_KEY=ci-only-secret-key-not-for-production
+          DJANGO_DEBUG=False
+          DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+          EOF
+
+      # Required because your Compose volume is external
+      - name: Create PostgreSQL volume
+        run: docker volume create military_buff_pgdata
+
+      # Validate Docker Compose file
+      - name: Validate Compose
+        run: docker compose config --quiet
+
+      # Build Django Docker image
+      - name: Build Django image
+        run: docker compose build web
+
+      # Start PostgreSQL container
+      - name: Start PostgreSQL
+        run: docker compose up -d --wait db
+
+      # Check Django configuration
+      - name: Django system check
+        run: |
+          docker compose run --rm -T web \
+            python manage.py check
+
+      # Validate migrations
+      - name: Check migrations
+        run: |
+          docker compose run --rm -T web \
+            python manage.py makemigrations --check --dry-run
+
+      # Create database tables
+      - name: Run migrations
+        run: |
+          docker compose run --rm -T web \
+            python manage.py migrate --noinput
+
+      # Run Django tests
+      - name: Run tests
+        run: |
+          docker compose run --rm -T web \
+            python manage.py test --noinput
+
+      # Show logs if something fails
+      - name: Show Docker logs
+        if: failure()
+        run: docker compose logs --tail=100
+
+      # Stop containers after testing
+      - name: Cleanup
+        if: always()
+        run: docker compose down
