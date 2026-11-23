@@ -1,6 +1,7 @@
 
 services:
- 
+
+  # PostgreSQL Database
   db:
     image: postgres:17
     restart: unless-stopped
@@ -22,30 +23,12 @@ services:
       timeout: 5s
       retries: 5
 
-volumes:
-  postgres_data:
-    external: true
-    name: military_buff_pgdata
-
-    image: postgres:16
-    restart: unless-stopped
-
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
+  # Django Application
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+
     restart: unless-stopped
 
     env_file:
@@ -62,8 +45,8 @@ volumes:
       db:
         condition: service_healthy
 
+# Persistent PostgreSQL Storage
 volumes:
   postgres_data:
     external: true
     name: military_buff_pgdata
-
