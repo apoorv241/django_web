@@ -67,9 +67,37 @@ docker compose up -d --no-deps web
 docker compose exec -T web python manage.py check
 
 # Verify HTTP response
-curl --fail --silent --show-error \
-    --retry 5 --retry-delay 2 \
-    http://127.0.0.1:8000/ > /dev/null
+
+# Wait for Django/Gunicorn to become ready
+echo "Waiting for Django to respond..."
+
+READY=false
+
+for attempt in $(seq 1 20); do
+
+    if curl -fsS \
+        --max-time 5 \
+        -o /dev/null \
+        http://127.0.0.1:8000/; then
+
+        echo "Django is ready!"
+        READY=true
+        break
+    fi
+
+    echo "Attempt $attempt: Django not ready yet"
+    sleep 2
+done
+
+if [ "$READY" != "true" ]; then
+    echo "Deployment failed: Django did not become ready"
+    docker compose ps
+    docker compose logs --tail=100 web
+    exit 1
+fi
+
+echo "Deployment successful!"
+
 
 echo "Deployment successful: $SHA"
 docker compose ps
