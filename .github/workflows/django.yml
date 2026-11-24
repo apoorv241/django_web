@@ -103,6 +103,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActionsDeploy
+          role-skip-session-tagging: true
           aws-region: us-east-2
 
       - name: Deploy to EC2
