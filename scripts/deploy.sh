@@ -78,7 +78,7 @@ for attempt in $(seq 1 20); do
     if curl -fsS \
         --max-time 5 \
         -o /dev/null \
-        http://127.0.0.1:8000/; then
+        http://127.0.0.1:80/; then
 
         echo "Django is ready!"
         READY=true
